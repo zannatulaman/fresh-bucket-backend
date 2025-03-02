@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const Profile = require("../models/Profile");
 
 // Nodemailer setup
 
@@ -44,6 +45,17 @@ router.post("/register", async (req, res, next) => {
       otp,
     });
 
+    const newProfile = new Profile({
+      user: newUser._id,
+      firstName: newUser.name,
+      lastName: "",
+      email: newUser.email,
+      image: "",
+      dob: "",
+      phone: "",
+      gender: "",
+    });
+
     // Send OTP email
     transporter.sendMail(
       {
@@ -63,11 +75,13 @@ router.post("/register", async (req, res, next) => {
 
     // Save user
     await newUser.save();
+    await newProfile.save();
 
     // Generate JWT token
     const payload = {
       user: {
         id: newUser.id,
+        email: newUser.email,
       },
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -141,9 +155,9 @@ router.post("/forget-password", async (req, res, next) => {
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    isExistUser.otp=otp
-    
-    await isExistUser.save()
+    isExistUser.otp = otp;
+
+    await isExistUser.save();
 
     // Send OTP email
     transporter.sendMail(
@@ -162,15 +176,11 @@ router.post("/forget-password", async (req, res, next) => {
         console.log("OTP sent successfully");
       }
     );
-      
 
-      res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "OTP sent successfully",
-     
     });
-
-
   } catch (error) {
     console.log("Error", error);
     next(error);
@@ -178,44 +188,39 @@ router.post("/forget-password", async (req, res, next) => {
 });
 
 router.post("/reset-password", async (req, res, next) => {
-     
-       try {
-         const { email, otp, password } = req.body;
+  try {
+    const { email, otp, password } = req.body;
 
-         const isExistUser = await User.findOne({ email });
+    const isExistUser = await User.findOne({ email });
 
-         if (!isExistUser) {
-           throw new Error("User not found");
-         }
+    if (!isExistUser) {
+      throw new Error("User not found");
+    }
 
-         const isMatched = isExistUser.otp === otp;
+    const isMatched = isExistUser.otp === otp;
 
-         if (!isMatched) {
-           throw new Error("Opt is not Matched");
-         }
+    if (!isMatched) {
+      throw new Error("Opt is not Matched");
+    }
 
-         // Hash password
-         const saltRounds = 10;
-         const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-         isExistUser.password = hashedPassword;
-         isExistUser.otp = "";
+    isExistUser.password = hashedPassword;
+    isExistUser.otp = "";
 
-         await isExistUser.save();
+    await isExistUser.save();
 
-         res.status(200).json({
-           succcess: true,
-           message: "Password reset successful",
-           data: isExistUser,
-         });
-       } catch (error) {
-             console.log('Error', error);
-             next(error)
-       }
-
-
-})
-
-
+    res.status(200).json({
+      succcess: true,
+      message: "Password reset successful",
+      data: isExistUser,
+    });
+  } catch (error) {
+    console.log("Error", error);
+    next(error);
+  }
+});
 
 module.exports = router;

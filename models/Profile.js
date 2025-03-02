@@ -12,9 +12,11 @@ const profileSchema = new mongoose.Schema(
     },
     lastName: {
       type: String,
-      required: true,
     },
     email: {
+      type: String,
+    },
+    image: {
       type: String,
     },
     dob: {

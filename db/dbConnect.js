@@ -16,7 +16,6 @@ async function dbConnect() {
             console.log("Something went wrong, couldn't connect with database", error);
         }
 
-  // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
 }
 
 module.exports = dbConnect

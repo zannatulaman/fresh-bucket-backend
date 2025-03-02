@@ -7,15 +7,26 @@ const jwt = require("jsonwebtoken");
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    
+      console.log('email', email);
+
 
     if (!email || !password) {
-      throw new Error("Email and password are required");
+      // throw new Error("Email and password are required");
+        res.status(401).json({
+          success: false,
+          message: "Email and password are required",
+        });
     }
 
     const user = await User.findOne({ email: email });
 
     if (!user) {
-      throw new Error("User not found");
+      // throw new Error("User not found");
+      res.status(401).json({
+             success: false,
+             message: "User not found" 
+      })
     }
 
     //matching the password
@@ -32,7 +43,8 @@ router.post("/login", async (req, res, next) => {
 
     const payload = {
       user: {
-        id: user.id
+        id: user.id,
+        email: user.email
       },
     };
 
